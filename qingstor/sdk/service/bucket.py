@@ -912,6 +912,23 @@ class Bucket(object):
                 pass
             if "id" not in x:
                 raise ParameterRequiredError("id", "rule")
+            if "noncurrent_version_expiration" in x:
+                pass
+            if "noncurrent_version_transition" in x:
+                if "storage_class" not in x["noncurrent_version_transition"]:
+                    raise ParameterRequiredError(
+                        "storage_class", "noncurrent_version_transition"
+                    )
+                if "storage_class" in x["noncurrent_version_transition"]:
+                    storage_class_valid_values = ["STANDARD_IA", "STANDARD"]
+                    if str(x["noncurrent_version_transition"]["storage_class"]
+                           ) not in storage_class_valid_values:
+                        raise ParameterValueNotAllowedError(
+                            "storage_class",
+                            x["noncurrent_version_transition"]["storage_class"],
+                            storage_class_valid_values
+                        )
+                pass
             if "status" not in x:
                 raise ParameterRequiredError("status", "rule")
             if "status" in x:
