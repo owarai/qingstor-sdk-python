@@ -524,6 +524,29 @@ class Bucket(object):
     def get_bucket_statistics_validate(op):
         pass
 
+    def get_versioning_request(self):
+        operation = {
+            "API": "GetBucketVersioning",
+            "Method": "GET",
+            "URI": "/<bucket-name>?versioning",
+            "Headers": {},
+            "Params": {},
+            "Elements": {},
+            "Properties": self.properties.copy(),
+            "Body": None
+        }
+        self.get_bucket_versioning_validate(operation)
+        return Request(self.config, operation)
+
+    def get_versioning(self):
+        req = self.get_versioning_request()
+        resp = self.client.send(req.sign())
+        return Unpacker(resp)
+
+    @staticmethod
+    def get_bucket_versioning_validate(op):
+        pass
+
     def head_request(self):
         operation = {
             "API": "HeadBucket",
@@ -594,6 +617,55 @@ class Bucket(object):
 
     @staticmethod
     def list_multipart_uploads_validate(op):
+        pass
+
+    def list_object_versions_request(
+        self,
+        delimiter=None,
+        key_marker=None,
+        limit=None,
+        prefix=None,
+        version_id_marker=None
+    ):
+        operation = {
+            "API": "ListObjectVersions",
+            "Method": "GET",
+            "URI": "/<bucket-name>?versions",
+            "Headers": {},
+            "Params": {
+                "delimiter": delimiter,
+                "key_marker": key_marker,
+                "limit": limit,
+                "prefix": prefix,
+                "version_id_marker": version_id_marker,
+            },
+            "Elements": {},
+            "Properties": self.properties.copy(),
+            "Body": None
+        }
+        self.list_object_versions_validate(operation)
+        return Request(self.config, operation)
+
+    def list_object_versions(
+        self,
+        delimiter=None,
+        key_marker=None,
+        limit=None,
+        prefix=None,
+        version_id_marker=None
+    ):
+        req = self.list_object_versions_request(
+            delimiter=delimiter,
+            key_marker=key_marker,
+            limit=limit,
+            prefix=prefix,
+            version_id_marker=version_id_marker
+        )
+        resp = self.client.send(req.sign())
+        return Unpacker(resp)
+
+    @staticmethod
+    def list_object_versions_validate(op):
         pass
 
     def list_objects_request(
@@ -676,8 +748,6 @@ class Bucket(object):
 
     @staticmethod
     def put_bucket_acl_validate(op):
-        if "acl" not in op["Elements"]:
-            raise ParameterRequiredError("acl", "PutBucketACLInput")
         for x in op["Elements"]["acl"]:
             if "grantee" not in x:
                 raise ParameterRequiredError("grantee", "acl")
@@ -853,6 +923,14 @@ class Bucket(object):
             if "transition" in x:
                 if "storage_class" not in x["transition"]:
                     raise ParameterRequiredError("storage_class", "transition")
+                if "storage_class" in x["transition"]:
+                    storage_class_valid_values = ["STANDARD_IA", "STANDARD"]
+                    if str(x["transition"]["storage_class"]
+                           ) not in storage_class_valid_values:
+                        raise ParameterValueNotAllowedError(
+                            "storage_class", x["transition"]["storage_class"],
+                            storage_class_valid_values
+                        )
                 pass
             pass
         pass
@@ -1056,6 +1134,37 @@ class Bucket(object):
             pass
         pass
 
+    def put_versioning_request(self, status=None):
+        operation = {
+            "API": "PutBucketVersioning",
+            "Method": "PUT",
+            "URI": "/<bucket-name>?versioning",
+            "Headers": {},
+            "Params": {},
+            "Elements": {
+                "status": status,
+            },
+            "Properties": self.properties.copy(),
+            "Body": None
+        }
+        self.put_bucket_versioning_validate(operation)
+        return Request(self.config, operation)
+
+    def put_versioning(self, status=None):
+        req = self.put_versioning_request(status=status)
+        resp = self.client.send(req.sign())
+        return Unpacker(resp)
+
+    @staticmethod
+    def put_bucket_versioning_validate(op):
+        if "status" in op["Elements"]:
+            status_valid_values = ["DISABLED", "ENABLED", "SUSPENDED"]
+            if str(op["Elements"]["status"]) not in status_valid_values:
+                raise ParameterValueNotAllowedError(
+                    "status", op["Elements"]["status"], status_valid_values
+                )
+        pass
+
     def abort_multipart_upload_request(self, object_key, upload_id=None):
         operation = {
             "API": "AbortMultipartUpload",
@@ -1236,13 +1345,15 @@ class Bucket(object):
             pass
         pass
 
-    def delete_object_request(self, object_key):
+    def delete_object_request(self, object_key, version_id=None):
         operation = {
             "API": "DeleteObject",
             "Method": "DELETE",
             "URI": "/<bucket-name>/<object-key>",
             "Headers": {},
-            "Params": {},
+            "Params": {
+                "version_id": version_id,
+            },
             "Elements": {},
             "Properties": self.properties.copy(),
             "Body": None
@@ -1251,8 +1362,8 @@ class Bucket(object):
         self.delete_object_validate(operation)
         return Request(self.config, operation)
 
-    def delete_object(self, object_key):
-        req = self.delete_object_request(object_key)
+    def delete_object(self, object_key, version_id=None):
+        req = self.delete_object_request(object_key, version_id=version_id)
         resp = self.client.send(req.sign())
         return Unpacker(resp)
 
@@ -1269,6 +1380,7 @@ class Bucket(object):
         response_content_language=None,
         response_content_type=None,
         response_expires=None,
+        version_id=None,
         if_match=None,
         if_modified_since=None,
         if_none_match=None,
@@ -1290,6 +1402,7 @@ class Bucket(object):
                 "response-content-language": response_content_language,
                 "response-content-type": response_content_type,
                 "response-expires": response_expires,
+                "version_id": version_id,
             },
             "Elements": {},
             "Properties": self.properties.copy(),
@@ -1327,6 +1440,7 @@ class Bucket(object):
         response_content_language=None,
         response_content_type=None,
         response_expires=None,
+        version_id=None,
         if_match=None,
         if_modified_since=None,
         if_none_match=None,
@@ -1344,6 +1458,7 @@ class Bucket(object):
             response_content_language=response_content_language,
             response_content_type=response_content_type,
             response_expires=response_expires,
+            version_id=version_id,
             if_match=if_match,
             if_modified_since=if_modified_since,
             if_none_match=if_none_match,
@@ -1364,6 +1479,7 @@ class Bucket(object):
     def head_object_request(
         self,
         object_key,
+        version_id=None,
         if_match=None,
         if_modified_since=None,
         if_none_match=None,
@@ -1377,7 +1493,9 @@ class Bucket(object):
             "Method": "HEAD",
             "URI": "/<bucket-name>/<object-key>",
             "Headers": {},
-            "Params": {},
+            "Params": {
+                "version_id": version_id,
+            },
             "Elements": {},
             "Properties": self.properties.copy(),
             "Body": None
@@ -1406,6 +1524,7 @@ class Bucket(object):
     def head_object(
         self,
         object_key,
+        version_id=None,
         if_match=None,
         if_modified_since=None,
         if_none_match=None,
@@ -1416,6 +1535,7 @@ class Bucket(object):
     ):
         req = self.head_object_request(
             object_key,
+            version_id=version_id,
             if_match=if_match,
             if_modified_since=if_modified_since,
             if_none_match=if_none_match,

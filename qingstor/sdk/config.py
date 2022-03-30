@@ -39,9 +39,9 @@ default_config_file_content = (
 )
 
 config_items_map = [
-    "access_key_id", "secret_access_key", "host", "port",
-    "protocol", "connection_retries", "timeout", "log_level",
-    "enable_virtual_host_style", "zone", "endpoint"
+    "access_key_id", "secret_access_key", "host", "port", "protocol",
+    "connection_retries", "timeout", "log_level", "enable_virtual_host_style",
+    "zone", "endpoint"
 ]
 
 default_config_file = "~/.qingstor/config.yaml"
@@ -90,7 +90,8 @@ class Config:
         self.load_from_env()
         if self.endpoint != "":
             u = urlparse(self.endpoint)
-            (self.protocol, self.host, self.port)  = (u.scheme, u.hostname, u.port)
+            (self.protocol, self.host,
+             self.port) = (u.scheme, u.hostname, u.port)
         return self
 
     def load_config_from_data(self, data):
@@ -126,5 +127,3 @@ class Config:
             if v is not None:
                 setattr(self, item, v)
         return self
-
-

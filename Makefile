@@ -30,7 +30,7 @@ generate:
 	@echo "ok"
 
 update:
-	git submodule update --remote
+	git submodule update --init --recursive
 	@echo "ok"
 
 unit:
