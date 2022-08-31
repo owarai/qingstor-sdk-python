@@ -173,6 +173,7 @@ class Request:
             "response-cache-control", "response-content-type",
             "response-content-language", "response-content-encoding",
             "response-content-disposition", "lifecycle", "logging",
-            "replication", "append", "position", "cname"
+            "replication", "append", "position", "cname",
+            "versioning", "version_id", "versions"
         ]
         return key in keys_map
