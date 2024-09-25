@@ -163,10 +163,12 @@ class Builder:
         if not ((protocol == "https" and port == 443) or
                 (protocol == "http" and port == 80)):
             endpoint = f"{endpoint}:{port}"
-        if zone != "":
+
+        if zone != "" and not self.config.is_ip:
             endpoint = f"{zone}.{endpoint}"
-        if bucket_name != "" and self.config.enable_virtual_host_style:
-            endpoint = f"{bucket_name}.{endpoint}"
+        if bucket_name != "":
+            if self.config.enable_virtual_host_style and not self.config.is_ip:
+                endpoint = f"{bucket_name}.{endpoint}"
 
         return endpoint
 
